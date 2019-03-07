@@ -12,12 +12,4 @@
 	<modules>
 		<module>tokentestsupport</module>
 	</modules>
-	
-    <distributionManagement>
-		<repository>
-			<id>m2internal</id>
-			<name>NAV Maven2 Internal Repository</name>
-			<url>https://repo.adeo.no/repository/maven-releases/</url>
-		</repository>
-	</distributionManagement>
 </project>
