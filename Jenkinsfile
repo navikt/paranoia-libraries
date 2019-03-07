@@ -18,17 +18,11 @@ node {
         }
 
         stage("build") {
-            def mvnHome = tool "maven-3.5.3"
-            withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-                sh "mvn -B -V verify"
-            }
+            sh "make build"
         }
 
-        stage("deploy") {
-            def mvnHome = tool "maven-3.5.3"
-            withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-                sh "mvn -B -V -fn deploy -DskipTests -Dmaven.install.skip=true"
-            }
+        stage("upload") {
+            sh "make upload"
         }
 
         github.commitStatus("success", "navikt/paranoia-libraries", appToken, commitHash)
