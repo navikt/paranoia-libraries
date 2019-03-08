@@ -5,21 +5,29 @@ import io.jsonwebtoken.Jwts;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 
+@RunWith(value = Parameterized.class)
 public class TokenHandlerTest {
+    private TokenHandler tokenHandler;
 
-    private TokenHandler tokenHandler = new TokenHandler();
+    public TokenHandlerTest(TokenHandler tokenHandler) {
+        this.tokenHandler = tokenHandler;
+    }
 
-    @Before
-    public void setUp() {
-        tokenHandler = new TokenHandler();
+    @Parameterized.Parameters
+    public static Collection<TokenHandler> setUp() {
+        return Arrays.asList(new TokenHandler(), new TokenHandler(true), new TokenHandler(false));
     }
 
     @Test

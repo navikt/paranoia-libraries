@@ -6,7 +6,7 @@
 
     <groupId>no.nav.paranoia-libraries</groupId>
     <artifactId>token-test-support</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <build>
         <plugins>
             <plugin>

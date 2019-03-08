@@ -5,8 +5,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
+import java.io.*;
 import java.security.*;
+import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -15,17 +19,29 @@ import java.util.Base64;
 import java.util.Date;
 
 public class TokenHandler {
-    private KeyPair keyPair;
-
+    private PrivateKey privateKey;
+    private PublicKey publicKey;
 
     public TokenHandler() {
-        KeyPairGenerator keyPairGenerator = null;
+        this(false);
+    }
+    public TokenHandler(boolean staticKeyPair) {
         try {
-            keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        } catch (NoSuchAlgorithmException e) {
+            if (staticKeyPair) {
+                InputStream is = TokenHandler.class.getResourceAsStream("/teststatkeystore.jks");
+                var keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keystore.load(is, "test1234".toCharArray());
+                this.privateKey = (PrivateKey) keystore.getKey("teststatkey", "test1234".toCharArray());
+                this.publicKey = keystore.getCertificate("teststatkey").getPublicKey();
+            } else {
+                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+                var keyPair = keyPairGenerator.generateKeyPair();
+                this.privateKey = keyPair.getPrivate();
+                this.publicKey = keyPair.getPublic();
+            }
+        } catch (IOException | CertificateException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyStoreException e) {
             throw new RuntimeException(e);
         }
-        keyPair = keyPairGenerator.generateKeyPair();
     }
 
     public String getSignedToken(String payload) {
@@ -38,17 +54,17 @@ public class TokenHandler {
                 .setSubject(payload)
                 .setIssuer(issuer)
                 .setExpiration(Date.from(Instant.now().plus(10, ChronoUnit.MINUTES)))
-                .signWith(SignatureAlgorithm.RS256, keyPair.getPrivate()).compact();
+                .signWith(SignatureAlgorithm.RS256, privateKey).compact();
     }
 
     public Claims validateAndParseToken(String jwt) {
         return Jwts.parser()
-                .setSigningKey(keyPair.getPublic())
+                .setSigningKey(publicKey)
                 .parseClaimsJws(jwt).getBody();
     }
 
     public String getJWKS(String kid) {
-        var publicKey = (RSAPublicKey) keyPair.getPublic();
+        var publicKey = (RSAPublicKey) this.publicKey;
         var key = new Jwks.Keys();
         key.setKty(publicKey.getAlgorithm()); // getAlgorithm() returns kty not algorithm
         key.setKid(kid);
@@ -64,10 +80,10 @@ public class TokenHandler {
     }
 
     public PublicKey getPublicKey() {
-        return keyPair.getPublic();
+        return publicKey;
     }
 
     public PrivateKey getPrivateKey() {
-        return keyPair.getPrivate();
+        return privateKey;
     }
 }
