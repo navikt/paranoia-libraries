@@ -13,10 +13,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Date;
+import java.util.*;
 
 public class TokenHandler {
     private PrivateKey privateKey;
@@ -44,16 +41,31 @@ public class TokenHandler {
         }
     }
 
+    @Deprecated(forRemoval = true)
     public String getSignedToken(String payload) {
         return getSignedToken("testid", payload, "testissuer");
     }
 
+    @Deprecated(forRemoval = true)
     public String getSignedToken(String id, String payload, String issuer) {
         return Jwts.builder().setId(id)
                 .setIssuedAt(new Date())
                 .setSubject(payload)
                 .setIssuer(issuer)
                 .setExpiration(Date.from(Instant.now().plus(10, ChronoUnit.MINUTES)))
+                .signWith(SignatureAlgorithm.RS256, privateKey).compact();
+    }
+
+    /**
+     * Standard-claims:
+     * iss, sub, aud og jti er: String
+     * exp, nbf og iat er: long representert av sekunder fra epoke
+     * 
+     * @param claimsList
+     * @return
+     */
+    public String getSignedToken(Map<String, Object> claimsList) {
+        return Jwts.builder().setClaims(claimsList)
                 .signWith(SignatureAlgorithm.RS256, privateKey).compact();
     }
 

@@ -1,9 +1,8 @@
 package no.nav.tokentest;
 
 import com.google.gson.Gson;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -13,13 +12,14 @@ import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @RunWith(value = Parameterized.class)
 public class TokenHandlerTest {
     private TokenHandler tokenHandler;
+    private TokenHandler otherTokenHandler = new TokenHandler();
 
     public TokenHandlerTest(TokenHandler tokenHandler) {
         this.tokenHandler = tokenHandler;
@@ -45,6 +45,62 @@ public class TokenHandlerTest {
         Assert.assertEquals("{\"testname\":\"testvalue2\"}", decodedToken.getSubject());
     }
 
+    @Test(expected = SignatureException.class)
+    public void testValidatingInvalidToken() {
+        var signedToken = tokenHandler.getSignedToken(createClaimsMap());
+
+        var decodedToken = otherTokenHandler.validateAndParseToken(signedToken);
+    }
+
+    @Test
+    public void testSigningAndValidatingWithClaimsList() {
+        var claimsMap = createClaimsMap();
+        var signedToken = tokenHandler.getSignedToken(claimsMap);
+
+        var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+        validateClaimsMap(claimsMap, decodedToken);
+    }
+
+    @Test(expected = ExpiredJwtException.class)
+    public void testValidatingWithOutdatedExpiration() {
+        var claimsMap = createClaimsMap();
+        claimsMap.put("exp", Instant.now().minus(1, ChronoUnit.HOURS).getEpochSecond());
+        var signedToken = tokenHandler.getSignedToken(claimsMap);
+
+        var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+    }
+
+    @Test(expected = PrematureJwtException.class)
+    public void testValidatingWithPrematureNBF() {
+        var claimsMap = createClaimsMap();
+        claimsMap.put("nbf", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond());
+        var signedToken = tokenHandler.getSignedToken(claimsMap);
+
+        var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+    }
+
+    private Map<String, Object> createClaimsMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("iss", "testid");
+        map.put("sub", "{\"testname\":\"testvalue4\"}");
+        map.put("aud", "testaudi");
+        map.put("exp", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond());
+        map.put("nbf", Instant.now().minus(1, ChronoUnit.HOURS).getEpochSecond());
+        map.put("iat", Instant.now().minus(30, ChronoUnit.MINUTES).getEpochSecond());
+        map.put("jti", "testid");
+        return map;
+    }
+
+    private void validateClaimsMap(Map<String, Object> claimsMap, Claims decodedToken){
+        Assert.assertEquals(claimsMap.get("iss"), decodedToken.getIssuer());
+        Assert.assertEquals(claimsMap.get("sub"), decodedToken.getSubject());
+        Assert.assertEquals(claimsMap.get("aud"), decodedToken.getAudience());
+        Assert.assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("exp"))), decodedToken.getExpiration());
+        Assert.assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("nbf"))), decodedToken.getNotBefore());
+        Assert.assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("iat"))), decodedToken.getIssuedAt());
+        Assert.assertEquals(claimsMap.get("jti"), decodedToken.getId());
+    }
+
     @Test
     public void testKeyFromJWKS() throws NoSuchAlgorithmException, InvalidKeySpecException {
 
@@ -65,7 +121,8 @@ public class TokenHandlerTest {
     @Test
     public void testValidatingFromJWKS() throws InvalidKeySpecException, NoSuchAlgorithmException {
 
-        var signedToken = tokenHandler.getSignedToken("{\"testname\":\"testvalue3\"}");
+        var claimsMap = createClaimsMap();
+        var signedToken = tokenHandler.getSignedToken(claimsMap);
 
         var gson = new Gson();
         var key = gson.fromJson(tokenHandler.getJWKS("testkid"), Jwks.class)
@@ -82,6 +139,6 @@ public class TokenHandlerTest {
                 .setSigningKey(publicKeyFromJWKS)
                 .parseClaimsJws(signedToken).getBody();
 
-        Assert.assertEquals("{\"testname\":\"testvalue3\"}", claims.getSubject());
+        validateClaimsMap(claimsMap, claims);
     }
 }
