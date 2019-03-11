@@ -17,7 +17,8 @@ public class OrganisasjonsnummerValidatorTest {
             assertTrue(orgNr + " er et gyldig organisasjonsnummer, og skulle gitt true som svar", validator.test(orgNr));
     }
     private List<String> gyldigeOrgNummer() {
-        return List.of("135795310",
+        return List.of("123456785",
+                "135795313",
                 "999162681",
                 "889640782",
                 "998004993",
@@ -37,9 +38,9 @@ public class OrganisasjonsnummerValidatorTest {
 
     private List<String> ugyldigeOrgNummer() {
         return List.of("889640780",
+                "135795310",
                 "135795311",
                 "135795312",
-                "135795313",
                 "135795314",
                 "135795315",
                 "135795316",
