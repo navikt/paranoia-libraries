@@ -3,6 +3,8 @@ package no.nav;
 import no.nav.idvalidator.OrganisasjonsnummerValidator;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -11,30 +13,39 @@ public class OrganisasjonsnummerValidatorTest {
 
     @Test
     public void testGyldigeOrganisasjonsnummer() {
-        assertTrue(validator.test("135795310"));
-        assertTrue(validator.test("999162681"));
-        assertTrue(validator.test("889640782"));
-        assertTrue(validator.test("998004993"));
-        assertTrue(validator.test("974791854"));
-        assertTrue(validator.test("921117795"));
-        assertTrue(validator.test("917755736"));
-        assertTrue(validator.test("995690217"));
-        assertTrue(validator.test("991013628"));
-        assertTrue(validator.test("993110469"));
+        for(String orgNr : gyldigeOrgNummer())
+            assertTrue(orgNr + " er et gyldig organisasjonsnummer, og skulle gitt true som svar", validator.test(orgNr));
+    }
+    private List<String> gyldigeOrgNummer() {
+        return List.of("135795310",
+                "999162681",
+                "889640782",
+                "998004993",
+                "974791854",
+                "921117795",
+                "917755736",
+                "995690217",
+                "991013628",
+                "993110469");
     }
 
     @Test
     public void testUgyldigeOrganisasjonsnummer() {
-        assertFalse(validator.test("889640780"));
-        assertFalse(validator.test("135795311"));
-        assertFalse(validator.test("135795312"));
-        assertFalse(validator.test("135795313"));
-        assertFalse(validator.test("135795314"));
-        assertFalse(validator.test("135795315"));
-        assertFalse(validator.test("135795316"));
-        assertFalse(validator.test("135795317"));
-        assertFalse(validator.test("135795318"));
-        assertFalse(validator.test("135795319"));
+        for(String orgNr : ugyldigeOrgNummer())
+            assertFalse(orgNr + " er et ugyldig organisasjonsnummer, og skulle gitt false som svar", validator.test(orgNr));
+    }
+
+    private List<String> ugyldigeOrgNummer() {
+        return List.of("889640780",
+                "135795311",
+                "135795312",
+                "135795313",
+                "135795314",
+                "135795315",
+                "135795316",
+                "135795317",
+                "135795318",
+                "135795319");
     }
 
     @Test
