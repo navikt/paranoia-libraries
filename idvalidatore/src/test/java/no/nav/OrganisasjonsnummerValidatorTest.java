@@ -82,11 +82,13 @@ public class OrganisasjonsnummerValidatorTest {
     @Test
     public void testUgyldigOrganisasjonsnummerMedBokstav(){
         assertFalse(validator.test("88964A782"));
+        assertFalse(validator.test("88964A786"));
     }
 
     @Test
     public void testUgyldigOrganisasjonsnummerMedSpesialtegn(){
         assertFalse(validator.test("88964{782"));
+        assertFalse(validator.test("88964{786"));
     }
 
     @Test
@@ -103,5 +105,7 @@ public class OrganisasjonsnummerValidatorTest {
     public void testUgyldigOrganisasjonsnummerMedBokstaverForTall(){
         assertFalse(validator.test("bdfhjfdba"));
         assertFalse(validator.test("BDFHJFDBA"));
+        assertFalse(validator.test("bdfhjfdb2"));
+        assertFalse(validator.test("BDFHJFDB2"));
     }
 }
