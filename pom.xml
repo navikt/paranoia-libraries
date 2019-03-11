@@ -11,5 +11,6 @@
 	
 	<modules>
 		<module>tokentestsupport</module>
-	</modules>
+        <module>idvalidatore</module>
+    </modules>
 </project>
