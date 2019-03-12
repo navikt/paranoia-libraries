@@ -30,5 +30,14 @@
     </dependencies>
 
 
+    <distributionManagement>
+        <repository>
+            <id>iapp-releases</id>
+            <name>NAV Maven2 Internal Repository</name>
+            <url>https://repo.adeo.no/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
+
+
 
 </project>

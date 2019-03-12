@@ -19,6 +19,7 @@ public class OrganisasjonsnummerValidatorTest {
     private List<String> gyldigeOrgNummer() {
         return List.of("123456785",
                 "135795313",
+                "999263550",
                 "999162681",
                 "889640782",
                 "998004993",
