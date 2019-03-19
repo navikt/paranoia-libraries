@@ -58,9 +58,8 @@ public class TokenHandler {
 
     /**
      * Standard-claims:
-     * iss, sub, aud og jti er: String
-     * exp, nbf og iat er: long representert av sekunder fra epoke
-     * 
+     * exp, nbf og iat er long representert av sekunder fra epoke
+     *
      * @param claimsList
      * @return
      */

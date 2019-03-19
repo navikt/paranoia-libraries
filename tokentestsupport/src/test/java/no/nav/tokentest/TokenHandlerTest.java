@@ -81,7 +81,7 @@ public class TokenHandlerTest {
 
     private Map<String, Object> createClaimsMap() {
         Map<String, Object> map = new HashMap<>();
-        map.put("iss", "testid");
+        map.put("iss", "testiss");
         map.put("sub", "{\"testname\":\"testvalue4\"}");
         map.put("aud", "testaudi");
         map.put("exp", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond());

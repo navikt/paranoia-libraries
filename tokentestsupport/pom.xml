@@ -17,6 +17,19 @@
                     <target>11</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.4.6</version>
+                <configuration>
+                    <targetClasses>
+                        <param>no.nav.tokentest.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>no.nav.tokentest.*</param>
+                    </targetTests>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

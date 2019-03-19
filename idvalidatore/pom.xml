@@ -15,11 +15,24 @@
                     <target>11</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.4.6</version>
+                <configuration>
+                    <targetClasses>
+                        <param>no.nav.idvalidator.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>no.nav.*</param>
+                    </targetTests>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <groupId>no.nav.paranoia-libraries</groupId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.0.1</version>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
