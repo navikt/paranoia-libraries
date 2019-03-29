@@ -18,8 +18,8 @@ import java.util.*;
 
 @RunWith(value = Parameterized.class)
 public class TokenHandlerTest {
-    private TokenHandler tokenHandler;
-    private TokenHandler otherTokenHandler = new TokenHandler();
+    private static TokenHandler tokenHandler;
+    private static TokenHandler otherTokenHandler = new TokenHandler();
 
     public TokenHandlerTest(TokenHandler tokenHandler) {
         this.tokenHandler = tokenHandler;

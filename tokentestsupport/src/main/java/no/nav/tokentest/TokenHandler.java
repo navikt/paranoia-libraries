@@ -64,8 +64,20 @@ public class TokenHandler {
      * @return
      */
     public String getSignedToken(Map<String, Object> claimsList) {
-        return Jwts.builder().setClaims(claimsList)
+        var claims = defaultClaims();
+        claims.putAll(claimsList);
+        return Jwts.builder().setClaims(claims)
                 .signWith(SignatureAlgorithm.RS256, privateKey).compact();
+    }
+
+    private Map<String, Object> defaultClaims() {
+        var defaultClaims = new HashMap<String, Object>();
+        defaultClaims.put("iss", "tokentestsupport-TokenHandler");
+        defaultClaims.put("exp", Instant.now().plus(5, ChronoUnit.MINUTES).getEpochSecond());
+        defaultClaims.put("nbf", Instant.now().minus(1, ChronoUnit.MINUTES).getEpochSecond());
+        defaultClaims.put("iat", Instant.now().getEpochSecond());
+        defaultClaims.put("jti", "testid");
+        return defaultClaims;
     }
 
     public Claims validateAndParseToken(String jwt) {
