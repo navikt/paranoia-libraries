@@ -18,7 +18,7 @@ import java.util.*;
 
 @RunWith(value = Parameterized.class)
 public class TokenHandlerTest {
-    private static TokenHandler tokenHandler;
+    private TokenHandler tokenHandler;
     private static TokenHandler otherTokenHandler = new TokenHandler();
 
     public TokenHandlerTest(TokenHandler tokenHandler) {
@@ -37,17 +37,15 @@ public class TokenHandlerTest {
 
     @Test
     public void testSigningAndValidating() {
-        var signedToken = tokenHandler.getSignedToken("testsignedid", "{\"testname\":\"testvalue2\"}", "testissuer2");
+        var signedToken = tokenHandler.getSignedToken("{\"testname\":\"testvalue2\"}");
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
-        Assert.assertEquals("testsignedid", decodedToken.getId());
-        Assert.assertEquals("testissuer2", decodedToken.getIssuer());
-        Assert.assertEquals("{\"testname\":\"testvalue2\"}", decodedToken.getSubject());
+        Assert.assertEquals("testvalue2", decodedToken.get("testname"));
     }
 
     @Test(expected = SignatureException.class)
     public void testValidatingInvalidToken() {
-        var signedToken = tokenHandler.getSignedToken(createClaimsMap());
+        var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withDefaultClaims().build());
 
         var decodedToken = otherTokenHandler.validateAndParseToken(signedToken);
     }
@@ -55,7 +53,7 @@ public class TokenHandlerTest {
     @Test
     public void testSigningAndValidatingWithClaimsList() {
         var claimsMap = createClaimsMap();
-        var signedToken = tokenHandler.getSignedToken(claimsMap);
+        var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withClaims(claimsMap).build());
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
         validateClaimsMap(claimsMap, decodedToken);
@@ -63,18 +61,16 @@ public class TokenHandlerTest {
 
     @Test(expected = ExpiredJwtException.class)
     public void testValidatingWithOutdatedExpiration() {
-        var claimsMap = createClaimsMap();
-        claimsMap.put("exp", Instant.now().minus(1, ChronoUnit.HOURS).getEpochSecond());
-        var signedToken = tokenHandler.getSignedToken(claimsMap);
+        var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withDefaultClaims()
+                .withClaim("exp", Instant.now().minus(1, ChronoUnit.HOURS).getEpochSecond()).build());
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
     }
 
     @Test(expected = PrematureJwtException.class)
     public void testValidatingWithPrematureNBF() {
-        var claimsMap = createClaimsMap();
-        claimsMap.put("nbf", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond());
-        var signedToken = tokenHandler.getSignedToken(claimsMap);
+        var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withDefaultClaims()
+                .withClaim("nbf", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond()).build());
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
     }
@@ -122,7 +118,7 @@ public class TokenHandlerTest {
     public void testValidatingFromJWKS() throws InvalidKeySpecException, NoSuchAlgorithmException {
 
         var claimsMap = createClaimsMap();
-        var signedToken = tokenHandler.getSignedToken(claimsMap);
+        var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withClaims(claimsMap).build());
 
         var gson = new Gson();
         var key = gson.fromJson(tokenHandler.getJWKS("testkid"), Jwks.class)

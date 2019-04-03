@@ -9,10 +9,6 @@ import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class TokenHandler {
@@ -41,43 +37,22 @@ public class TokenHandler {
         }
     }
 
-    @Deprecated(forRemoval = true)
     public String getSignedToken(String payload) {
-        return getSignedToken("testid", payload, "testissuer");
-    }
-
-    @Deprecated(forRemoval = true)
-    public String getSignedToken(String id, String payload, String issuer) {
-        return Jwts.builder().setId(id)
-                .setIssuedAt(new Date())
-                .setSubject(payload)
-                .setIssuer(issuer)
-                .setExpiration(Date.from(Instant.now().plus(10, ChronoUnit.MINUTES)))
+        return Jwts.builder().setPayload(payload)
                 .signWith(SignatureAlgorithm.RS256, privateKey).compact();
     }
+
 
     /**
      * Standard-claims:
      * exp, nbf og iat er long representert av sekunder fra epoke
      *
-     * @param claimsList
+     * @param claims
      * @return
      */
-    public String getSignedToken(Map<String, Object> claimsList) {
-        var claims = defaultClaims();
-        claims.putAll(claimsList);
-        return Jwts.builder().setClaims(claims)
+    public String getSignedToken(TokenClaims claims) {
+        return Jwts.builder().setClaims(claims.getClaimsMap())
                 .signWith(SignatureAlgorithm.RS256, privateKey).compact();
-    }
-
-    private Map<String, Object> defaultClaims() {
-        var defaultClaims = new HashMap<String, Object>();
-        defaultClaims.put("iss", "tokentestsupport-TokenHandler");
-        defaultClaims.put("exp", Instant.now().plus(5, ChronoUnit.MINUTES).getEpochSecond());
-        defaultClaims.put("nbf", Instant.now().minus(1, ChronoUnit.MINUTES).getEpochSecond());
-        defaultClaims.put("iat", Instant.now().getEpochSecond());
-        defaultClaims.put("jti", "testid");
-        return defaultClaims;
     }
 
     public Claims validateAndParseToken(String jwt) {
@@ -96,7 +71,7 @@ public class TokenHandler {
         key.setAlg("RS256");
         key.setUse("sig");
         var keys = new Jwks();
-        keys.setKeys(new ArrayList<Jwks.Keys>(Arrays.asList(key)));
+        keys.setKeys(new ArrayList<>(Arrays.asList(key)));
 
         var gson = new Gson();
         return gson.toJson(keys);
