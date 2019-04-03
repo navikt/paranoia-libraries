@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static org.junit.Assert.assertEquals;
+
 @RunWith(value = Parameterized.class)
 public class TokenHandlerTest {
     private TokenHandler tokenHandler;
@@ -40,7 +42,7 @@ public class TokenHandlerTest {
         var signedToken = tokenHandler.getSignedToken("{\"testname\":\"testvalue2\"}");
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
-        Assert.assertEquals("testvalue2", decodedToken.get("testname"));
+        assertEquals("testvalue2", decodedToken.get("testname"));
     }
 
     @Test(expected = SignatureException.class)
@@ -57,6 +59,19 @@ public class TokenHandlerTest {
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
         validateClaimsMap(claimsMap, decodedToken);
+    }
+
+    @Test
+    public void testSigningAndValidatingWithClaimsListAndHeader() {
+        var claimsMap = createClaimsMap();
+        var signedToken = tokenHandler.getSignedToken(TokenHeaders.builder().withKid("testkid").build(),
+                TokenClaims.builder().withClaims(claimsMap).build());
+
+        var decodedToken = tokenHandler.validateAndParseTokenToJwts(signedToken);
+        validateClaimsMap(claimsMap, decodedToken.getBody());
+        assertEquals(2, decodedToken.getHeader().size());
+        assertEquals("testkid", decodedToken.getHeader().getKeyId());
+        assertEquals("RS256", decodedToken.getHeader().getAlgorithm());
     }
 
     @Test(expected = ExpiredJwtException.class)
@@ -88,13 +103,13 @@ public class TokenHandlerTest {
     }
 
     private void validateClaimsMap(Map<String, Object> claimsMap, Claims decodedToken){
-        Assert.assertEquals(claimsMap.get("iss"), decodedToken.getIssuer());
-        Assert.assertEquals(claimsMap.get("sub"), decodedToken.getSubject());
-        Assert.assertEquals(claimsMap.get("aud"), decodedToken.getAudience());
-        Assert.assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("exp"))), decodedToken.getExpiration());
-        Assert.assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("nbf"))), decodedToken.getNotBefore());
-        Assert.assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("iat"))), decodedToken.getIssuedAt());
-        Assert.assertEquals(claimsMap.get("jti"), decodedToken.getId());
+        assertEquals(claimsMap.get("iss"), decodedToken.getIssuer());
+        assertEquals(claimsMap.get("sub"), decodedToken.getSubject());
+        assertEquals(claimsMap.get("aud"), decodedToken.getAudience());
+        assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("exp"))), decodedToken.getExpiration());
+        assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("nbf"))), decodedToken.getNotBefore());
+        assertEquals(Date.from(Instant.ofEpochSecond((Long) claimsMap.get("iat"))), decodedToken.getIssuedAt());
+        assertEquals(claimsMap.get("jti"), decodedToken.getId());
     }
 
     @Test
@@ -111,7 +126,7 @@ public class TokenHandlerTest {
         var spec = new RSAPublicKeySpec(new BigInteger(1, decoder.decode(key.getN())), new BigInteger(1, decoder.decode(key.getE())));
         var publicKeyFromJWKS = keyFactory.generatePublic(spec);
         var expctedPublicKey = tokenHandler.getPublicKey();
-        Assert.assertEquals(expctedPublicKey, publicKeyFromJWKS);
+        assertEquals(expctedPublicKey, publicKeyFromJWKS);
     }
 
     @Test

@@ -2,6 +2,7 @@ package no.nav.tokentest;
 
 import com.google.gson.Gson;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -51,14 +52,22 @@ public class TokenHandler {
      * @return
      */
     public String getSignedToken(TokenClaims claims) {
-        return Jwts.builder().setClaims(claims.getClaimsMap())
+        return getSignedToken(TokenHeaders.builder().build(), claims);
+    }
+
+    public String getSignedToken(TokenHeaders headers, TokenClaims claims) {
+        return Jwts.builder().setHeader(headers.getHeadersMap()).setClaims(claims.getClaimsMap())
                 .signWith(SignatureAlgorithm.RS256, privateKey).compact();
     }
 
     public Claims validateAndParseToken(String jwt) {
+        return validateAndParseTokenToJwts(jwt).getBody();
+    }
+
+    public Jws<Claims> validateAndParseTokenToJwts(String jwt) {
         return Jwts.parser()
                 .setSigningKey(publicKey)
-                .parseClaimsJws(jwt).getBody();
+                .parseClaimsJws(jwt);
     }
 
     public String getJWKS(String kid) {
