@@ -2,7 +2,6 @@ package no.nav.tokentest;
 
 import com.google.gson.Gson;
 import io.jsonwebtoken.*;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -21,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 @RunWith(value = Parameterized.class)
 public class TokenHandlerTest {
     private TokenHandler tokenHandler;
-    private static TokenHandler otherTokenHandler = new TokenHandler();
 
     public TokenHandlerTest(TokenHandler tokenHandler) {
         this.tokenHandler = tokenHandler;
@@ -45,11 +43,31 @@ public class TokenHandlerTest {
         assertEquals("testvalue2", decodedToken.get("testname"));
     }
 
+    @Test
+    public void testValidatingWithExposedPublicKey() {
+        var signedToken = tokenHandler.getSignedToken("{\"testname\":\"testvalue2\"}");
+
+        var decodedToken = Jwts.parser()
+                .setSigningKey(tokenHandler.getPublicKey())
+                .parseClaimsJws(signedToken).getBody();
+        assertEquals("testvalue2", decodedToken.get("testname"));
+    }
+
+    @Test
+    public void testValidatingTokenSignedWithExposedPrivateKey() {
+
+        var signedToken = Jwts.builder().setPayload("{\"testname\":\"testvalue2\"}")
+                .signWith(SignatureAlgorithm.RS256, tokenHandler.getPrivateKey()).compact();
+
+        var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+        assertEquals("testvalue2", decodedToken.get("testname"));
+    }
+
     @Test(expected = SignatureException.class)
     public void testValidatingInvalidToken() {
         var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withDefaultClaims().build());
 
-        var decodedToken = otherTokenHandler.validateAndParseToken(signedToken);
+        var decodedToken = new TokenHandler().validateAndParseToken(signedToken);
     }
 
     @Test
@@ -151,5 +169,15 @@ public class TokenHandlerTest {
                 .parseClaimsJws(signedToken).getBody();
 
         validateClaimsMap(claimsMap, claims);
+    }
+
+    public static class IkkeParameterisert {
+        @Test
+        public void testSigningAndValidatingStaticKeyPair() {
+            var signedToken = new TokenHandler(true).getSignedToken("{\"testname\":\"testvalue2\"}");
+
+            var decodedToken = new TokenHandler(true).validateAndParseToken(signedToken);
+            assertEquals("testvalue2", decodedToken.get("testname"));
+        }
     }
 }
