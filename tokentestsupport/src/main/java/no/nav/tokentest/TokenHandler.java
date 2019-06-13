@@ -6,11 +6,20 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-import java.io.*;
-import java.security.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 
 public class TokenHandler {
     private PrivateKey privateKey;
@@ -43,14 +52,6 @@ public class TokenHandler {
                 .signWith(SignatureAlgorithm.RS256, privateKey).compact();
     }
 
-
-    /**
-     * Standard-claims:
-     * exp, nbf og iat er long representert av sekunder fra epoke
-     *
-     * @param claims
-     * @return
-     */
     public String getSignedToken(TokenClaims claims) {
         return getSignedToken(TokenHeaders.builder().build(), claims);
     }
@@ -73,7 +74,7 @@ public class TokenHandler {
     public String getJWKS(String kid) {
         var publicKey = (RSAPublicKey) this.publicKey;
         var key = new Jwks.Keys();
-        key.setKty(publicKey.getAlgorithm()); // getAlgorithm() returns kty not algorithm
+        key.setKty(publicKey.getAlgorithm());
         key.setKid(kid);
         key.setN(Base64.getUrlEncoder().encodeToString(publicKey.getModulus().toByteArray()));
         key.setE(Base64.getUrlEncoder().encodeToString(publicKey.getPublicExponent().toByteArray()));

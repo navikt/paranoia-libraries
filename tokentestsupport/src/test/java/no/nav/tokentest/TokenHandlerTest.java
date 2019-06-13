@@ -1,7 +1,12 @@
 package no.nav.tokentest;
 
 import com.google.gson.Gson;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.PrematureJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.SignatureException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -13,7 +18,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -137,7 +147,7 @@ public class TokenHandlerTest {
         var key = gson.fromJson(tokenHandler.getJWKS("testkid"), Jwks.class)
                 .getKeys().stream()
                 .filter((k)-> k.getKid().equals("testkid"))
-                .findAny().orElseThrow(()->new RuntimeException("Finner ikke sertifikat i JWKS."));
+                .findAny().orElseThrow(()->new RuntimeException("Can't find certificate in JWKS."));
         KeyFactory keyFactory = KeyFactory.getInstance(key.getKty());
 
         var decoder = Base64.getUrlDecoder();
@@ -157,7 +167,7 @@ public class TokenHandlerTest {
         var key = gson.fromJson(tokenHandler.getJWKS("testkid"), Jwks.class)
                 .getKeys().stream()
                 .filter((k)-> k.getKid().equals("testkid"))
-                .findAny().orElseThrow(()->new RuntimeException("Finner ikke sertifikat i JWKS."));
+                .findAny().orElseThrow(()->new RuntimeException("Can't find certificate in JWKS."));
         KeyFactory keyFactory = KeyFactory.getInstance(key.getKty());
 
         var decoder = Base64.getUrlDecoder();
