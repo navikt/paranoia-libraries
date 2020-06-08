@@ -1,7 +1,7 @@
 <settings>
     <servers>
         <server>
-            <id>github</id>
+            <id>paranoia-libraries</id>
             <username>${env.GITHUB_USERNAME}</username>
             <password>${env.GITHUB_PASSWORD}</password>
         </server>
