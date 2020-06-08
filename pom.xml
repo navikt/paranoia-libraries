@@ -13,4 +13,14 @@
 		<module>tokentestsupport</module>
         <module>idvalidatore</module>
     </modules>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub navikt Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/navikt/paranoia-libraries</url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
+    </distributionManagement>
+
 </project>
