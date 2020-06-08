@@ -57,4 +57,13 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub navikt Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/navikt/paranoia-libraries/tokentestsupport</url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
+    </distributionManagement>
+
 </project>
