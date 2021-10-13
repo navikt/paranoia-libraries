@@ -1,22 +1,26 @@
 package no.nav.tokentest;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 public class TokenHeadersTest {
-    
+
     @Test
     public void testTomHeaders() {
         TokenHeaders th = TokenHeaders.builder().build();
+
         assertEquals(0, th.getHeadersMap().size());
     }
 
     @Test
     public void testWithHeader() {
         TokenHeaders th = TokenHeaders.builder().withHeader("testkey", "testValue").build();
+
         assertEquals(1, th.getHeadersMap().size());
         assertEquals("testValue", th.getHeadersMap().get("testkey"));
     }
@@ -27,6 +31,7 @@ public class TokenHeadersTest {
         claimsMap.put("key1", "value1");
         claimsMap.put("key2", "value2");
         TokenHeaders th = TokenHeaders.builder().withHeaders(claimsMap).build();
+
         assertEquals(2, th.getHeadersMap().size());
         assertEquals("value1", th.getHeadersMap().get("key1"));
         assertEquals("value2", th.getHeadersMap().get("key2"));
@@ -35,6 +40,7 @@ public class TokenHeadersTest {
     @Test
     public void testWithKid() {
         TokenHeaders th = TokenHeaders.builder().withKid("testkid").build();
+
         assertEquals(1, th.getHeadersMap().size());
         assertEquals("testkid", th.getHeadersMap().get("kid"));
     }

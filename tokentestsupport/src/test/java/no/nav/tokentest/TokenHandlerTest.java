@@ -1,15 +1,12 @@
 package no.nav.tokentest;
 
 import com.google.gson.Gson;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.PrematureJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import io.jsonwebtoken.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -18,70 +15,73 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@RunWith(value = Parameterized.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TokenHandlerTest {
-    private TokenHandler tokenHandler;
 
-    public TokenHandlerTest(TokenHandler tokenHandler) {
-        this.tokenHandler = tokenHandler;
+    static Stream<TokenHandler> tokenHandlerProvider() {
+        return Stream.of(new TokenHandler(), new TokenHandler(true), new TokenHandler(false));
     }
 
-    @Parameterized.Parameters
-    public static Collection<TokenHandler> setUp() {
-        return Arrays.asList(new TokenHandler(), new TokenHandler(true), new TokenHandler(false));
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testSigning(TokenHandler tokenHandler) {
+        tokenHandler.getSignedToken("{\"testname\":\"testvalue\"}");
     }
 
-    @Test
-    public void testSigning() {
-        var signedToken = tokenHandler.getSignedToken("{\"testname\":\"testvalue\"}");
-    }
-
-    @Test
-    public void testSigningAndValidating() {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testSigningAndValidating(TokenHandler tokenHandler) {
         var signedToken = tokenHandler.getSignedToken("{\"testname\":\"testvalue2\"}");
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+
         assertEquals("testvalue2", decodedToken.get("testname"));
     }
 
-    @Test
-    public void testValidatingWithExposedPublicKey() {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testValidatingWithExposedPublicKey(TokenHandler tokenHandler) {
         var signedToken = tokenHandler.getSignedToken("{\"testname\":\"testvalue2\"}");
 
         var decodedToken = Jwts.parser()
                 .setSigningKey(tokenHandler.getPublicKey())
                 .parseClaimsJws(signedToken).getBody();
+
         assertEquals("testvalue2", decodedToken.get("testname"));
     }
 
-    @Test
-    public void testValidatingTokenSignedWithExposedPrivateKey() {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testValidatingTokenSignedWithExposedPrivateKey(TokenHandler tokenHandler) {
 
         var signedToken = Jwts.builder().setPayload("{\"testname\":\"testvalue2\"}")
                 .signWith(SignatureAlgorithm.RS256, tokenHandler.getPrivateKey()).compact();
 
         var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+
         assertEquals("testvalue2", decodedToken.get("testname"));
     }
 
-    @Test(expected = SignatureException.class)
-    public void testValidatingInvalidToken() {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testValidatingInvalidToken(TokenHandler tokenHandler) {
         var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withDefaultClaims().build());
 
-        var decodedToken = new TokenHandler().validateAndParseToken(signedToken);
+        Assertions.assertThrows(SignatureException.class, () -> new TokenHandler().validateAndParseToken(signedToken));
     }
 
-    @Test
-    public void testSigningAndValidatingWithClaimsList() {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testSigningAndValidatingWithClaimsList(TokenHandler tokenHandler) {
         var claimsMap = createClaimsMap();
         var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withClaims(claimsMap).build());
 
@@ -89,33 +89,39 @@ public class TokenHandlerTest {
         validateClaimsMap(claimsMap, decodedToken);
     }
 
-    @Test
-    public void testSigningAndValidatingWithClaimsListAndHeader() {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testSigningAndValidatingWithClaimsListAndHeader(TokenHandler tokenHandler) {
         var claimsMap = createClaimsMap();
         var signedToken = tokenHandler.getSignedToken(TokenHeaders.builder().withKid("testkid").build(),
                 TokenClaims.builder().withClaims(claimsMap).build());
 
         var decodedToken = tokenHandler.validateAndParseTokenToJwts(signedToken);
         validateClaimsMap(claimsMap, decodedToken.getBody());
+
         assertEquals(2, decodedToken.getHeader().size());
         assertEquals("testkid", decodedToken.getHeader().getKeyId());
         assertEquals("RS256", decodedToken.getHeader().getAlgorithm());
     }
 
-    @Test(expected = ExpiredJwtException.class)
-    public void testValidatingWithOutdatedExpiration() {
+    //@Test(expected = ExpiredJwtException.class)
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testValidatingWithOutdatedExpiration(TokenHandler tokenHandler) {
         var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withDefaultClaims()
                 .withClaim("exp", Instant.now().minus(1, ChronoUnit.HOURS).getEpochSecond()).build());
 
-        var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+        assertThrows(ExpiredJwtException.class, () -> tokenHandler.validateAndParseToken(signedToken));
     }
 
-    @Test(expected = PrematureJwtException.class)
-    public void testValidatingWithPrematureNBF() {
+    //@Test(expected = PrematureJwtException.class)
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testValidatingWithPrematureNBF(TokenHandler tokenHandler) {
         var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withDefaultClaims()
                 .withClaim("nbf", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond()).build());
 
-        var decodedToken = tokenHandler.validateAndParseToken(signedToken);
+        assertThrows(PrematureJwtException.class, () -> tokenHandler.validateAndParseToken(signedToken));
     }
 
     private Map<String, Object> createClaimsMap() {
@@ -130,7 +136,7 @@ public class TokenHandlerTest {
         return map;
     }
 
-    private void validateClaimsMap(Map<String, Object> claimsMap, Claims decodedToken){
+    private void validateClaimsMap(Map<String, Object> claimsMap, Claims decodedToken) {
         assertEquals(claimsMap.get("iss"), decodedToken.getIssuer());
         assertEquals(claimsMap.get("sub"), decodedToken.getSubject());
         assertEquals(claimsMap.get("aud"), decodedToken.getAudience());
@@ -140,25 +146,28 @@ public class TokenHandlerTest {
         assertEquals(claimsMap.get("jti"), decodedToken.getId());
     }
 
-    @Test
-    public void testKeyFromJWKS() throws NoSuchAlgorithmException, InvalidKeySpecException {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testKeyFromJWKS(TokenHandler tokenHandler) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
         var gson = new Gson();
         var key = gson.fromJson(tokenHandler.getJWKS("testkid"), Jwks.class)
                 .getKeys().stream()
-                .filter((k)-> k.getKid().equals("testkid"))
-                .findAny().orElseThrow(()->new RuntimeException("Can't find certificate in JWKS."));
+                .filter((k) -> k.getKid().equals("testkid"))
+                .findAny().orElseThrow(() -> new RuntimeException("Can't find certificate in JWKS."));
         KeyFactory keyFactory = KeyFactory.getInstance(key.getKty());
 
         var decoder = Base64.getUrlDecoder();
         var spec = new RSAPublicKeySpec(new BigInteger(1, decoder.decode(key.getN())), new BigInteger(1, decoder.decode(key.getE())));
         var publicKeyFromJWKS = keyFactory.generatePublic(spec);
         var expctedPublicKey = tokenHandler.getPublicKey();
+
         assertEquals(expctedPublicKey, publicKeyFromJWKS);
     }
 
-    @Test
-    public void testValidatingFromJWKS() throws InvalidKeySpecException, NoSuchAlgorithmException {
+    @ParameterizedTest
+    @MethodSource("tokenHandlerProvider")
+    public void testValidatingFromJWKS(TokenHandler tokenHandler) throws InvalidKeySpecException, NoSuchAlgorithmException {
 
         var claimsMap = createClaimsMap();
         var signedToken = tokenHandler.getSignedToken(TokenClaims.builder().withClaims(claimsMap).build());
@@ -166,8 +175,8 @@ public class TokenHandlerTest {
         var gson = new Gson();
         var key = gson.fromJson(tokenHandler.getJWKS("testkid"), Jwks.class)
                 .getKeys().stream()
-                .filter((k)-> k.getKid().equals("testkid"))
-                .findAny().orElseThrow(()->new RuntimeException("Can't find certificate in JWKS."));
+                .filter((k) -> k.getKid().equals("testkid"))
+                .findAny().orElseThrow(() -> new RuntimeException("Can't find certificate in JWKS."));
         KeyFactory keyFactory = KeyFactory.getInstance(key.getKty());
 
         var decoder = Base64.getUrlDecoder();
@@ -187,6 +196,7 @@ public class TokenHandlerTest {
             var signedToken = new TokenHandler(true).getSignedToken("{\"testname\":\"testvalue2\"}");
 
             var decodedToken = new TokenHandler(true).validateAndParseToken(signedToken);
+
             assertEquals("testvalue2", decodedToken.get("testname"));
         }
     }
