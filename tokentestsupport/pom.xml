@@ -4,34 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>no.nav.paranoia-libraries</groupId>
+    <parent>
+        <artifactId>libraries</artifactId>
+        <groupId>no.nav.paranoia</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
     <artifactId>token-test-support</artifactId>
-    <version>1.1.0</version>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.pitest</groupId>
-                <artifactId>pitest-maven</artifactId>
-                <version>1.4.6</version>
-                <configuration>
-                    <targetClasses>
-                        <param>no.nav.tokentest.*</param>
-                    </targetClasses>
-                    <targetTests>
-                        <param>no.nav.tokentest.*</param>
-                    </targetTests>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <version>1.1.1</version>
 
     <dependencies>
         <dependency>
@@ -57,13 +37,31 @@
         </dependency>
     </dependencies>
 
-	
-    <distributionManagement>
-		<repository>
-			<id>iapp-releases</id>
-			<name>NAV Maven2 Internal Repository</name>
-			<url>https://repo.adeo.no/repository/maven-releases/</url>
-		</repository>
-	</distributionManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>14</source>
+                    <target>14</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.4.6</version>
+                <configuration>
+                    <targetClasses>
+                        <param>no.nav.tokentest.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>no.nav.tokentest.*</param>
+                    </targetTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

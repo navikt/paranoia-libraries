@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>no.nav.paranoia-libraries</groupId>
+    <groupId>no.nav.paranoia</groupId>
     <artifactId>libraries</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -13,4 +13,14 @@
 		<module>tokentestsupport</module>
         <module>idvalidatore</module>
     </modules>
+
+    <distributionManagement>
+        <repository>
+            <id>paranoia-libraries</id>
+            <name>GitHub navikt Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/navikt/paranoia-libraries</url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
+    </distributionManagement>
+
 </project>
